@@ -7,7 +7,7 @@ from tools.utils import format_time, emotion_to_text
 
 logging.basicConfig(level=logging.ERROR)
 
-def generate_smi(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "dataset/output/", lang: str = "ko"):
+def generate_smi(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "./dataset/output/", lang: str = "ko"):
     output_path = os.path.join(output_dir, filename)
     with open(output_path, "w") as f:
         f.write("<SAMI>\n")
@@ -22,7 +22,7 @@ def generate_smi(filename: str, subtitles: List[Tuple[float, float, str]], outpu
         f.write("</BODY>\n")
         f.write("</SAMI>\n")
 
-def generate_srt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "dataset/output/"):
+def generate_srt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "./dataset/output/"):
     output_path = os.path.join(output_dir, filename)
     with open(output_path, "w") as f:
         subtitle_number = 1
@@ -32,7 +32,7 @@ def generate_srt(filename: str, subtitles: List[Tuple[float, float, str]], outpu
             f.write(f"{text}\n\n")
             subtitle_number += 1
 
-def generate_txt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "dataset/output/"):
+def generate_txt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "./dataset/output/"):
     output_path = os.path.join(output_dir, filename)
     with open(output_path, "w") as f:
         for _, _, text in subtitles:
@@ -40,6 +40,11 @@ def generate_txt(filename: str, subtitles: List[Tuple[float, float, str]], outpu
 
 
 def matching_formats(subtitles, args):
+    # 출력 파일의 디렉토리를 생성
+    output_dir = os.path.dirname('./dataset/output/')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     if args.output_type == 'all':
         generate_smi(args.output_path, subtitles)
         generate_srt(args.output_path, subtitles)

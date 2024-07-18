@@ -3,4 +3,4 @@ pandas
 git+https://github.com/m-bain/whisperx.git
 speechbrain
 opencv-python
-spleeter
+demucs
