@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vime.js Video with Subtitles</title>
+    <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/@vime/core@^5/themes/default.css"
+    />
+    <script
+            defer
+            type="module"
+            src="https://cdn.jsdelivr.net/npm/@vime/core@^5/dist/vime/vime.esm.js"
+    ></script>
+    <style>
+        body {
+            display: flex;
+        }
+        #video-container {
+            flex: 1;
+        }
+        #subtitles-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            border-left: 1px solid #ccc;
+        }
+        .subtitle-item {
+            cursor: pointer;
+            padding: 5px;
+            margin: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        .subtitle-item:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+<div id="video-container">
+    <vm-player>
+        <vm-video cross-origin="true" poster="">
+            <source data-src="./input/youtube.mp4" type="video/mp4" />
+            <track id="subtitle-track" default src="./output.vtt" kind="subtitles" srclang="ko" label="Korean" />
+        </vm-video>
+        <vm-default-ui></vm-default-ui>
+    </vm-player>
+</div>
+<div id="subtitles-container">
+    <!-- Subtitles will be loaded here -->
+</div>
+
+<script type="module">
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const player = document.querySelector('vm-player');
+        const subtitlesContainer = document.getElementById('subtitles-container');
+        const track = document.getElementById('subtitle-track');
+
+        // Wait for the track to load
+        track.addEventListener('load', () => {
+            const cues = track.track.cues;
+            for (let i = 0; i < cues.length; i++) {
+                const cue = cues[i];
+                const div = document.createElement('div');
+                div.className = 'subtitle-item';
+                div.textContent = cue.text;
+                div.dataset.startTime = cue.startTime;
+                div.onclick = () => {
+                    player.currentTime = cue.startTime;
+                    player.play();
+                };
+                subtitlesContainer.appendChild(div);
+            }
+        });
+    });
+</script>
+</body>
+</html>

@@ -26,7 +26,7 @@ def whisperx_result(audio_path, language='ko', api_keys='./assets/api_key.json')
     transcribe_options = dict(task="transcribe", **options)
 
     # WhisperX 모델 로드
-    model = whisperx.load_model("large-v2", device=args.device, compute_type=args.compute_type)
+    model = whisperx.load_model("large-v3", device=args.device, compute_type=args.compute_type)
     audio = whisperx.load_audio(audio_path)  # 오디오 파일 로드
 
     # WhisperX 출력 정렬
@@ -35,12 +35,11 @@ def whisperx_result(audio_path, language='ko', api_keys='./assets/api_key.json')
     result = whisperx.align(result["segments"], model_a, metadata, audio, device=args.device, return_char_alignments=False)
 
     # 화자 분할을 원할 경우, 다음 라인의 주석을 해제
-    '''
+
     # 화자 레이블 할당
     diarize_model = whisperx.DiarizationPipeline(use_auth_token=my_token, device=args.device)
     # 알 수 있는 경우 화자의 최소/최대 수 추가
     diarize_segments = diarize_model(audio)
     result = whisperx.assign_word_speakers(diarize_segments, result)
-    '''
 
     return result['segments']  # 정렬된 텍스트 세그먼트 반환

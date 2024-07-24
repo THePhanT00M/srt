@@ -10,7 +10,6 @@ from demucs.apply import apply_model
 from demucs.audio import AudioFile
 import soundfile as sf
 
-
 logging.basicConfig(level=logging.ERROR)
 
 def split_audio(file_path, segment_length_ms, output_folder):
@@ -48,7 +47,71 @@ def get_duration(audio_path):
     duration = frames / float(rate)
     return duration
 
+def extract_audio_and_remove_background(input_file: str, output_file: str = './dataset/audio/no_mr_audio.mp3') -> str:
+    """
+    주어진 비디오 파일에서 오디오를 추출하고 MR을 제거하여 mp3 파일로 저장합니다.
 
+    매개변수:
+    input_file (str): 오디오를 추출할 비디오 파일의 경로
+    output_file (str, optional): MR이 제거된 오디오를 저장할 파일의 경로. 기본값은 './dataset/audio/no_mr_audio.mp3'
+
+    반환값:
+    str: MR이 제거된 오디오 파일의 경로
+    """
+
+    # 임시 파일 경로 설정
+    temp_audio_file = './temp_extracted_audio.wav'
+
+    # 출력 파일의 디렉토리를 생성
+    output_dir = os.path.dirname(output_file)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # ffmpeg 명령어를 구성하는 리스트 (16-bit WAV로 추출)
+    cmd = [
+        'ffmpeg',
+        '-i', input_file,
+        '-vn',
+        '-acodec', 'pcm_s16le',
+        '-ar', '44100',
+        '-ac', '2',
+        temp_audio_file
+    ]
+
+    # ffmpeg 명령어 실행
+    subprocess.run(cmd, input='y\n', text=True)
+
+    # Demucs 모델 불러오기
+    model = pretrained.get_model('htdemucs')
+    model.eval()
+
+    # 오디오 파일 읽기
+    wav = AudioFile(temp_audio_file).read(streams=0, samplerate=44100, channels=2)
+
+    # Demucs 모델을 사용하여 오디오 분리
+    sources = apply_model(model, wav.unsqueeze(0), split=True, overlap=0.25)[0]
+
+    # 분리된 보컬 트랙 저장
+    vocals = sources[model.sources.index('vocals')].cpu().squeeze().numpy()
+    vocal_path = os.path.splitext(output_file)[0] + '_vocals.wav'
+
+    # `soundfile`을 사용하여 오디오 파일로 저장
+    sf.write(vocal_path, vocals.T, 44100)
+
+    # ffmpeg를 사용하여 분리된 보컬 트랙을 mp3로 변환하여 저장
+    cmd = [
+        'ffmpeg',
+        '-i', vocal_path,
+        output_file
+    ]
+    subprocess.run(cmd, input='y\n', text=True)
+
+    # 임시 파일 삭제
+    os.remove(temp_audio_file)
+    os.remove(vocal_path)
+
+    # MR이 제거된 오디오 파일의 경로를 반환
+    return output_file
 
 def extract_audio(input_file, output_file='./dataset/audio/extracted_audio.mp3'):
     """
