@@ -1,6 +1,7 @@
 import whisperx  # WhisperX 모델을 사용하기 위한 라이브러리
 import json  # JSON 파일을 처리하기 위한 모듈
 from tools.cli import cli  # 명령줄 인터페이스(CLI) 파싱을 위한 모듈
+import torch
 
 def whisperx_result(audio_path, language='ko', api_keys='./assets/api_key.json'):
     """
@@ -27,6 +28,7 @@ def whisperx_result(audio_path, language='ko', api_keys='./assets/api_key.json')
 
     # WhisperX 모델 로드
     model = whisperx.load_model("large-v3", device=args.device, compute_type=args.compute_type)
+    model = torch.nn.DataParallel(model)
     audio = whisperx.load_audio(audio_path)  # 오디오 파일 로드
 
     # WhisperX 출력 정렬
