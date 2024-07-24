@@ -1,38 +1,79 @@
-import re
+import whisperx
+import os
+from pyannote.audio import Pipeline
 
-def filter_hesitation(text):
-    # 간투어를 나타내는 패턴 정의
-    hesitation_patterns = [
-        r'\b음\b', r'\b어\b', r'\b저\b', r'\b그\b', r'\b음...\b', r'\b어...\b'
-    ]
-    for pattern in hesitation_patterns:
-        text = re.sub(pattern, '', text)
-    return text
+def transcribe_with_whisperx(audio_path, model='small'):
+    # Load WhisperX model
+    model = whisperx.load_model(model, 'cpu', compute_type='int8')
+    # Transcribe audio
+    result = model.transcribe(audio_path)
+    return result
 
-def filter_redundant_phrases(text):
-    # 동일한 단어가 연속으로 반복되는 경우 필터링
-    redundant_pattern = re.compile(r'\b(\w+)\s*\1+\b')
-    text = redundant_pattern.sub(r'\1', text)
+def diarize_audio(audio_path, pipeline):
+    # Perform speaker diarization
+    diarization_result = pipeline({'uri': 'audio', 'audio': audio_path})
+    return diarization_result
 
-    # 다음 단어의 첫 글자가 같은 경우 필터링
-    similar_start_pattern = re.compile(r'\b(\w)(\w*)\s+\1(\w*)\b')
-    text = similar_start_pattern.sub(r'\1\3', text)
+def align_diarization_and_transcription(transcription, diarization_result):
+    # Align transcription with diarization results
+    aligned_subtitles = []
+    for segment in diarization_result:
+        start_time = segment.start
+        end_time = segment.end
+        speaker = segment.speaker
 
-    # 두 단어가 동일한 경우 필터링
-    redundant_two_words_pattern = re.compile(r'\b(\w+)\s+\1\b')
-    text = redundant_two_words_pattern.sub(r'\1', text)
+        for trans in transcription['segments']:
+            trans_start = trans['start']
+            trans_end = trans['end']
+            text = trans['text']
 
-    return text
+            if trans_start >= start_time and trans_end <= end_time:
+                aligned_subtitles.append({
+                    'start': trans_start,
+                    'end': trans_end,
+                    'speaker': speaker,
+                    'text': text
+                })
+    return aligned_subtitles
 
-def filter_text(text):
-    # 머뭇거리는 표현 필터링
-    text = filter_hesitation(text)
-    # 중복 발화 필터링
-    text = filter_redundant_phrases(text)
-    return text
+def save_subtitles_to_srt(subtitles, output_path):
+    # Save subtitles to SRT file
+    with open(output_path, 'w', encoding='utf-8') as f:
+        for i, subtitle in enumerate(subtitles):
+            f.write(f"{i+1}\n")
+            f.write(f"{format_timestamp(subtitle['start'])} --> {format_timestamp(subtitle['end'])}\n")
+            f.write(f"Speaker {subtitle['speaker']}: {subtitle['text']}\n")
+            f.write("\n")
 
-# 테스트
-sample_text = "음 이거는 저 저 이번에 어 어 새로운 프로젝트 입니다. 그 그 우리가 해야 할 일은 많습니다. 응응응 우 우리 우리 하는 일이 많습니다. 우리 번호 우리 번호가 두번 나옵니다."
-filtered_text = filter_text(sample_text)
-print("필터링 전:", sample_text)
-print("필터링 후:", filtered_text)
+def format_timestamp(seconds):
+    # Format timestamp for SRT
+    millis = int((seconds - int(seconds)) * 1000)
+    hours, remainder = divmod(int(seconds), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{hours:02}:{minutes:02}:{seconds:02},{millis:03}"
+
+def main(audio_path, output_srt_path, whisper_model='small', pyannote_token='YOUR_PYANNOTE_API_TOKEN'):
+    # Load diarization pipeline
+    pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization", use_auth_token=pyannote_token)
+
+    # Transcribe audio with WhisperX
+    transcription = transcribe_with_whisperx(audio_path, whisper_model)
+
+    # Perform speaker diarization
+    diarization_result = diarize_audio(audio_path, pipeline)
+
+    # Align transcription with diarization results
+    aligned_subtitles = align_diarization_and_transcription(transcription, diarization_result)
+
+    # Save aligned subtitles to SRT file
+    save_subtitles_to_srt(aligned_subtitles, output_srt_path)
+
+# Example usage
+audio_path = "./dataset/audio/extracted_audio.mp3"
+output_srt_path = "subtitles.srt"
+whisper_model = 'large-v3'
+pyannote_token = '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'
+
+
+if __name__ == '__main__':
+    main(audio_path, output_srt_path, whisper_model, pyannote_token)

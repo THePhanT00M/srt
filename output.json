@@ -1,0 +1,129 @@
+[
+    {
+        "start": 0.418,
+        "end": 4.122,
+        "text": " 연일 이어지고 있는 집중호우로 한강 수위가 오르고 있는데요.",
+        "words": [
+            {
+                "word": "연일",
+                "start": 0.418,
+                "end": 4.122,
+                "score": 0.1,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    },
+    {
+        "start": 4.622,
+        "end": 11.709,
+        "text": "수위 상승으로 인한 침수 위험으로 출입이 금지된 한강 둔치에서 낚시하는 남성의 모습이 포착됐습니다.",
+        "words": [
+            {
+                "word": "수위",
+                "start": 4.622,
+                "end": 8.646,
+                "score": 0.18,
+                "speaker": "SPEAKER_00"
+            },
+            {
+                "word": "낚시하는",
+                "start": 9.307,
+                "end": 11.709,
+                "score": 0.092,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    },
+    {
+        "start": 12.249,
+        "end": 16.534,
+        "text": "나무 윗부분이 물에 잠겨 있는 걸 보니 상당히 수위가 높아 보이는데요.",
+        "words": [
+            {
+                "word": "나무",
+                "start": 12.249,
+                "end": 16.534,
+                "score": 0.139,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    },
+    {
+        "start": 17.134,
+        "end": 25.282,
+        "text": "위험한 걸 아는지 모르는지 마스크에 모자까지 쓴 남성이 강물에 낚싯대를 들이온 채 여유롭게 앉아 있습니다.",
+        "words": [
+            {
+                "word": "위험한",
+                "start": 17.134,
+                "end": 25.282,
+                "score": 0.003,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    },
+    {
+        "start": 25.282,
+        "end": 29.725,
+        "text": " 자세히 보니 철제 의자까지 가져와 깔고 앉아 있는 모습인데요.",
+        "words": [
+            {
+                "word": "자세히",
+                "start": 25.282,
+                "end": 29.725,
+                "score": 0.061,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    },
+    {
+        "start": 29.745,
+        "end": 36.549,
+        "text": "정확히 언제 어디서 촬영됐는지 확인되지 않았지만 누리꾼들은 남성의 민폐 행동에 분노했습니다.",
+        "words": [
+            {
+                "word": "정확히",
+                "start": 29.745,
+                "end": 36.549,
+                "score": 0.08,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    },
+    {
+        "start": 37.05,
+        "end": 41.472,
+        "text": "누리꾼들은 저러다 사고 나면 애꿎은 소방 인력들만 고생하게 된다.",
+        "words": [
+            {
+                "word": "누리꾼들은",
+                "start": 37.05,
+                "end": 41.472,
+                "score": 0.099,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    },
+    {
+        "start": 41.953,
+        "end": 45.435,
+        "text": "하지 말라는 건 제발 하지 말라며 혀를 쳤습니다.",
+        "words": [
+            {
+                "word": "하지",
+                "start": 41.953,
+                "end": 45.435,
+                "score": 0.181,
+                "speaker": "SPEAKER_00"
+            }
+        ],
+        "speaker": "SPEAKER_00"
+    }
+]

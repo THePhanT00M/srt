@@ -1,7 +1,5 @@
 import os
 import logging
-import re
-import pandas as pd
 from typing import List, Tuple
 from tools.utils import format_time, emotion_to_text
 
@@ -22,7 +20,7 @@ def generate_smi(filename: str, subtitles: List[Tuple[float, float, str]], outpu
         f.write("</BODY>\n")
         f.write("</SAMI>\n")
 
-def generate_srt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "./dataset/output/"):
+def generate_srt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "dataset/output/"):
     output_path = os.path.join(output_dir, filename)
     with open(output_path, "w") as f:
         subtitle_number = 1
@@ -32,7 +30,7 @@ def generate_srt(filename: str, subtitles: List[Tuple[float, float, str]], outpu
             f.write(f"{text}\n\n")
             subtitle_number += 1
 
-def generate_txt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "./dataset/output/"):
+def generate_txt(filename: str, subtitles: List[Tuple[float, float, str]], output_dir: str = "dataset/output/"):
     output_path = os.path.join(output_dir, filename)
     with open(output_path, "w") as f:
         for _, _, text in subtitles:
@@ -40,11 +38,6 @@ def generate_txt(filename: str, subtitles: List[Tuple[float, float, str]], outpu
 
 
 def matching_formats(subtitles, args):
-    # 출력 파일의 디렉토리를 생성
-    output_dir = os.path.dirname('./dataset/output/')
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
     if args.output_type == 'all':
         generate_smi(args.output_path, subtitles)
         generate_srt(args.output_path, subtitles)
@@ -60,33 +53,34 @@ def matching_formats(subtitles, args):
 
 
 
-def generate_subtitles(whispers, max_line_length = 50):
+def generate_subtitles(tags_df, whispers, speech_moods = ''):
     subtitles = []
-    current_subtitle = ''
-    current_start_time = None
-    current_end_time = None
+    for index, row in tags_df.iterrows():
+        start_time = row['start_time']
+        end_time = row['end_time']
+        tag_name = row['name']
 
-    for segment in whispers:
-        for word_info in segment['words']:
-            word = word_info['word']
-            start_time = word_info['start']
-            end_time = word_info['end']
+        # Generate Speaker's text
+        whisper_text = ''
+        for segment in whispers['segments']:
+            if segment['start'] <= start_time and segment['end'] >= end_time:
+                whisper_text = segment['text']
+                break
 
-            if current_start_time is None:
-                current_start_time = start_time
+        '''
+        # Generate speaker's emotion text
+        mood_text = ''
+        if 'speech' in tag_name:
+            mood_text = emotion_to_text(speech_moods['emotion'])
+        '''
 
-            if len(current_subtitle) + len(word) + 1 <= max_line_length:
-                if current_subtitle:
-                    current_subtitle += ' '
-                current_subtitle += word
-                current_end_time = end_time
-            else:
-                subtitles.append((current_start_time, current_end_time, current_subtitle))
-                current_subtitle = word
-                current_start_time = start_time
-                current_end_time = end_time
+        # if you want to try background sound mood detection, uncomment this code
+        '''
+        if 'sound' in tag_name:
+            mood_text = predict_sound_mood(tag_name)
+        '''
 
-    if current_subtitle:
-        subtitles.append((current_start_time, current_end_time, current_subtitle))
+        subtitle_text = f"{whisper_text}"
+        subtitles.append((start_time, end_time, subtitle_text))
 
     return subtitles

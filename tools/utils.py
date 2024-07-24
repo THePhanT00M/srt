@@ -1,3 +1,4 @@
+import json
 import pydub
 import wave
 import subprocess  # 외부 프로그램 실행을 위한 모듈
@@ -12,6 +13,7 @@ import soundfile as sf
 
 logging.basicConfig(level=logging.ERROR)
 
+
 def split_audio(file_path, segment_length_ms, output_folder):
     """
     file_path: 오디오 파일의 경로 (예: "sample.mp3")
@@ -23,9 +25,9 @@ def split_audio(file_path, segment_length_ms, output_folder):
     total_length = len(audio)
 
     for i in range(0, total_length, segment_length_ms):
-        segment = audio[i:i+segment_length_ms]
-        segment.export(f"{output_folder}/segment_{i//segment_length_ms}.mp3", format="mp3")
-        print(f"Saved: segment_{i//segment_length_ms}.mp3")
+        segment = audio[i:i + segment_length_ms]
+        segment.export(f"{output_folder}/segment_{i // segment_length_ms}.mp3", format="mp3")
+        print(f"Saved: segment_{i // segment_length_ms}.mp3")
 
     print("All segments saved!")
 
@@ -40,30 +42,33 @@ def mp3towav(mp3_path, wav_path):
 
 
 def get_duration(audio_path):
-
     audio = wave.open(audio_path)
     frames = audio.getnframes()
     rate = audio.getframerate()
     duration = frames / float(rate)
     return duration
 
-def extract_audio_and_remove_background(input_file: str, output_file: str = './dataset/audio/no_mr_audio.mp3') -> str:
+
+def extract_audio_and_remove_background(input_file: str, output_dir: str = './dataset/audio') -> str:
     """
-    주어진 비디오 파일에서 오디오를 추출하고 MR을 제거하여 mp3 파일로 저장합니다.
+    주어진 비디오 파일에서 오디오를 추출하고 MR을 제거하여 wav 파일로 저장합니다.
 
     매개변수:
     input_file (str): 오디오를 추출할 비디오 파일의 경로
-    output_file (str, optional): MR이 제거된 오디오를 저장할 파일의 경로. 기본값은 './dataset/audio/no_mr_audio.mp3'
+    output_dir (str, optional): MR이 제거된 오디오를 저장할 디렉토리 경로. 기본값은 './dataset/audio'
 
     반환값:
     str: MR이 제거된 오디오 파일의 경로
     """
 
+    # 입력 파일명에서 확장자 제거하고, 출력 파일명 생성
+    input_filename = os.path.splitext(os.path.basename(input_file))[0]
+    output_file = os.path.join(output_dir, f'{input_filename}_no_mr.wav')
+
     # 임시 파일 경로 설정
     temp_audio_file = './temp_extracted_audio.wav'
 
     # 출력 파일의 디렉토리를 생성
-    output_dir = os.path.dirname(output_file)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -93,25 +98,16 @@ def extract_audio_and_remove_background(input_file: str, output_file: str = './d
 
     # 분리된 보컬 트랙 저장
     vocals = sources[model.sources.index('vocals')].cpu().squeeze().numpy()
-    vocal_path = os.path.splitext(output_file)[0] + '_vocals.wav'
 
-    # `soundfile`을 사용하여 오디오 파일로 저장
-    sf.write(vocal_path, vocals.T, 44100)
-
-    # ffmpeg를 사용하여 분리된 보컬 트랙을 mp3로 변환하여 저장
-    cmd = [
-        'ffmpeg',
-        '-i', vocal_path,
-        output_file
-    ]
-    subprocess.run(cmd, input='y\n', text=True)
+    # `soundfile`을 사용하여 분리된 보컬 트랙을 wav 파일로 저장
+    sf.write(output_file, vocals.T, 44100)
 
     # 임시 파일 삭제
     os.remove(temp_audio_file)
-    os.remove(vocal_path)
 
     # MR이 제거된 오디오 파일의 경로를 반환
     return output_file
+
 
 def extract_audio(input_file, output_file='./dataset/audio/extracted_audio.mp3'):
     """
@@ -132,7 +128,7 @@ def extract_audio(input_file, output_file='./dataset/audio/extracted_audio.mp3')
 
     # ffmpeg 명령어를 구성하는 리스트
     cmd = [
-        'ffmpeg',   # ffmpeg 프로그램
+        'ffmpeg',  # ffmpeg 프로그램
         '-i', input_file,  # 입력 파일을 지정
         '-vn',  # 비디오 트랙을 사용하지 않음 (오디오만 추출)
         output_file  # 출력 파일 경로를 지정
@@ -145,6 +141,7 @@ def extract_audio(input_file, output_file='./dataset/audio/extracted_audio.mp3')
 
     # 추출된 오디오 파일의 경로를 반환
     return output_file
+
 
 def remove_mr(input_audio, output_audio='./dataset/audio/no_mr_audio.mp3'):
     """
@@ -189,8 +186,8 @@ def remove_mr(input_audio, output_audio='./dataset/audio/no_mr_audio.mp3'):
     # MR이 제거된 오디오 파일의 경로를 반환
     return output_audio
 
-def trim_video(input_file, start, end, output_file = './dataset/video/trimed_output.mp4'):
 
+def trim_video(input_file, start, end, output_file='./dataset/video/trimed_output.mp4'):
     cmd = [
         'ffmpeg',
         '-i', input_file,
@@ -202,7 +199,8 @@ def trim_video(input_file, start, end, output_file = './dataset/video/trimed_out
 
     return output_file
 
-def trim_audio(input_file, start, end, output_file = './dataset/audio/trimed_audio.mp3'):
+
+def trim_audio(input_file, start, end, output_file='./dataset/audio/trimed_audio.mp3'):
     cmd = [
         'ffmpeg',
         '-i', input_file,
@@ -213,9 +211,9 @@ def trim_audio(input_file, start, end, output_file = './dataset/audio/trimed_aud
     subprocess.call(cmd)
 
     return output_file
+
 
 def transform(csv_path):
-
     results = pd.read_csv(csv_path)
 
     transformed_data = []
@@ -237,9 +235,9 @@ def transform(csv_path):
 
 
 def logging_print(input):
-    print("-"*50)
+    print("-" * 50)
     print(input)
-    print("-"*50)
+    print("-" * 50)
 
 
 def format_time(seconds):
@@ -252,7 +250,6 @@ def format_time(seconds):
     return f"{hours:02d}:{minutes:02d}:{int(seconds):02d},{milliseconds:03d}"
 
 
-
 def emotion_to_text(emotion):
     """Convert emotion code to text description."""
     emotion_mapping = {
@@ -262,3 +259,15 @@ def emotion_to_text(emotion):
         's': 'sad'
     }
     return emotion_mapping[emotion]
+
+def whisper_save_json(input_file, whispers, output_dir='./dataset/json'):
+    # 출력 파일의 디렉토리를 생성
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # 입력 파일명에서 확장자 제거하고, 출력 파일명 생성
+    input_filename = os.path.splitext(os.path.basename(input_file))[0]
+    output_file = os.path.join(output_dir, f'{input_filename}.json')
+
+    with open(output_file, 'w') as f:
+        json.dump(whispers, f)
